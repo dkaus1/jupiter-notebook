@@ -6,10 +6,13 @@ import re
 import sys
 import warnings
 from typing import Optional
+import requests
+import json
+
 
 import click
 from IPython import get_ipython
-from IPython.core.magic import Magics, line_cell_magic, magics_class
+from IPython.core.magic import Magics, line_cell_magic, magics_class, register_cell_magic
 from IPython.display import HTML, JSON, Markdown, Math
 from jupyter_ai_magics.utils import decompose_model_id, get_lm_providers
 from langchain.chains import LLMChain
@@ -111,6 +114,53 @@ class EnvironmentError(BaseException):
 
 class CellMagicError(BaseException):
     pass
+
+@magics_class
+class MyMagics(Magics):
+    def __init__(self, shell):
+        super().__init__(shell)
+        self.transcript_openai = []
+
+        # suppress warning when using old OpenAIChat provider
+        warnings.filterwarnings(
+            "ignore",
+            message="You are trying to use a chat model. This way of initializing it is "
+            "no longer supported. Instead, please use: "
+            "`from langchain.chat_models import ChatOpenAI`",
+        )
+        # suppress warning when using old Anthropic provider
+        warnings.filterwarnings(
+            "ignore",
+            message="This Anthropic LLM is deprecated. Please use "
+            "`from langchain.chat_models import ChatAnthropic` instead",
+        )
+
+        self.providers = get_lm_providers()
+
+        # initialize a registry of custom model/chain names
+        self.custom_model_registry = MODEL_ID_ALIASES
+    @line_cell_magic
+    def data_explore(self, line, cell=None):
+        raw_args = line;
+        print(self.shell.user_ns.keys())
+        user_ns = self.shell.user_ns
+        if 'myVar' in user_ns:
+            user_ns['myVar'] = 'Devesh is changed now'
+            print(user_ns['myVar'])
+        url = 'https://cppibpoc.azurewebsites.net/api/analyzedata'
+        headers = {
+            'x-functions-key': 'hm4qpkdFhNra_pFfoXpZqSS2GuCJyxO3hyqnczY4MR9CAzFu26rizQ==',
+            'Content-Type': 'application/json'
+        }
+        data = {
+            "sessionID":"3a42d185-3f85-4594-bf31-3d1e3fec1526",
+            "message":"".join(raw_args).replace("\n"," "),
+            "speaker":"Shivaraj"
+        }
+        response = requests.post(url, headers=headers, data=json.dumps(data))
+        data = response.json()
+        #print(data)
+        return data
 
 
 @magics_class
@@ -552,6 +602,34 @@ class AiMagics(Magics):
 
         return self.display_output(output, args.format, md)
 
+    # @line_cell_magic
+    # def data_explore(self, line, cell=None):
+    #     args = line.split(" ")
+    #     url = 'https://cppibpoc.azurewebsites.net/api/analyzedata'
+    #     headers = {
+    #         'x-functions-key': 'hm4qpkdFhNra_pFfoXpZqSS2GuCJyxO3hyqnczY4MR9CAzFu26rizQ==',
+    #         'Content-Type': 'application/json'
+    #     }
+    #     data = {
+    #         "sessionID":"3a42d185-3f85-4594-bf31-3d1e3fec1526",
+    #         "message":"".join(args).replace("\n"," "),
+    #         "speaker":"Shivaraj"
+    #     }
+    #     response = requests.post(url, headers=headers, data=json.dumps(data))
+    #     data = response.json()
+    #     #print(data)
+    #     return data
+    
+    @line_cell_magic
+    def lcmagic(self, line, cell=None):
+        "Magic that works both as %lcmagic and as %%lcmagic"
+        if cell is None:
+            print("Called as line magic")
+            return line
+        else:
+            print("Called as cell magic")
+            return line, cell
+        
     @line_cell_magic
     def ai(self, line, cell=None):
         raw_args = line.split(" ")

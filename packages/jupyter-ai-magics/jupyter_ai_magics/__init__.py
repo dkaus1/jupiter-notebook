@@ -8,6 +8,7 @@ from .embedding_providers import (
 )
 from .exception import store_exception
 from .magics import AiMagics
+from .magics import MyMagics
 
 # expose model providers on the package root
 from .providers import (
@@ -20,15 +21,17 @@ from .providers import (
     ChatOpenAINewProvider,
     ChatOpenAIProvider,
     CohereProvider,
+    CppibProvider,
     GPT4AllProvider,
     HfHubProvider,
     OpenAIProvider,
-    SmEndpointProvider,
+    SmEndpointProvider
 )
 
 
 def load_ipython_extension(ipython):
     ipython.register_magics(AiMagics)
+    ipython.register_magics(MyMagics)
     ipython.set_custom_exc((BaseException,), store_exception)
 
 

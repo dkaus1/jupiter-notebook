@@ -469,7 +469,7 @@ class ChatOpenAIProvider(BaseProvider, OpenAIChat):
 # conflicts can be resolved
 class ChatOpenAINewProvider(BaseProvider, ChatOpenAI):
     id = "openai-chat-new"
-    name = "OpenAI"
+    name = "OpenAI-devesh"
     models = [
         "gpt-3.5-turbo",
         "gpt-3.5-turbo-16k",
@@ -503,6 +503,29 @@ class AzureChatOpenAIProvider(BaseProvider, AzureChatOpenAI):
     name = "Azure OpenAI"
     models = ["*"]
     model_id_key = "deployment_name"
+    model_id_label = "Deployment name"
+    pypi_package_deps = ["openai"]
+    auth_strategy = EnvAuthStrategy(name="OPENAI_API_KEY")
+    registry = True
+
+    fields = [
+        TextField(
+            key="openai_api_base", label="Base API URL (required)", format="text"
+        ),
+        TextField(
+            key="openai_api_version", label="API version (required)", format="text"
+        ),
+        TextField(
+            key="openai_organization", label="Organization (optional)", format="text"
+        ),
+        TextField(key="openai_proxy", label="Proxy (optional)", format="text"),
+    ]
+
+class CppibProvider(BaseProvider, AzureChatOpenAI):
+    id = "cppib-chat"
+    name = "CPPIB OpenAI"
+    models = ["*"]
+    model_id_key = "deployment_name_cppib"
     model_id_label = "Deployment name"
     pypi_package_deps = ["openai"]
     auth_strategy = EnvAuthStrategy(name="OPENAI_API_KEY")
